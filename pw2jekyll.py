@@ -142,19 +142,28 @@ def write_redirect(entry, redirect_file, old_url, new_host):
 if __name__ == '__main__':
 
     optparser = optparse.OptionParser()
-    optparser.add_option('-r', '--redirect-file', dest='redirect_file', help='Write redirects to FILE', 
-        type="string", default=None)
+    optparser.add_option('-r', '--redirect-file', dest='redirect_file', 
+        help='Write redirects to FILE', type="string", default=None)
+    optparser.add_option('-v', '--verbose', dest='verbose', 
+        help='Print debugging messages to STDERR', action="store_true", default=False)
     (opts, args) = optparser.parse_args()
 
     try:
-       postsdir = args[1]
+        postsdir = args[1]
     except IndexError:
-       postsdir = '.'
+        postsdir = '.'
 
     if opts.redirect_file:
         redirect_file = open(opts.redirect_file, 'w')
+        
+    if opts.verbose:
+        sys.stderr.write('Reading file %s and outputting to %s.\n' % (args[0], postsdir))
 
     for entry in entries_from_csv(args[0], skipped_entries):
+        if opts.verbose:
+            sys.stderr.write('Got entry ID: %s and title: %s.\n' 
+                % (entry['eid'], entry['title']))
+            
         write_entry_as_markdown(entry, postsdir)
         if opts.redirect_file:
             write_redirect(entry, redirect_file, personal_weblog_url_pattern, jekyll_base_url)
