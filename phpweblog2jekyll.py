@@ -1,10 +1,45 @@
 #!/usr/bin/env python
+#
+# Convert a phpweblog database export into files for use with Jekyll
+# 
 import csv, sys, os, datetime, re
 from BeautifulSoup import BeautifulSoup
-
 from html2markdown import html2markdown
 
-def tidy_html(html, hostname):
+## Default settings, these are what I use. 
+## either edit in-place or create a file called local_settings.py
+
+# These map phpweblog category ids to category names
+category_to_tags = {
+    1: "miscellaneous",
+    2: "website",
+    3: "Australia",
+    4: "travel",
+    5: "computing",
+    6: "London",
+    7: "smoking",
+    8: "windsurfing",
+    9: "photos",
+}
+
+# If set, this fully qualifies relative links by prepending the string below
+# set it to '' to disable this.
+relative_links_url = 'http://www.darkskills.org.uk'
+
+# If you want to skip imports of a few entries, put their ids in a list
+# skipped_entries = [99, 100]
+skipped_entries = []
+
+# 
+
+## End of default settings
+
+try:
+    from local_settings import *
+except ImportError:
+    sys.stderr.write('WARNING: no local_settings.py found, using defaults.\n')
+
+def tidy_html(html, rel_url=''):
     """Modify the HTML in the following ways:
         - fully qualify unqualified links with <hostname>
         - prettify the HTML."""
@@ -17,19 +52,20 @@ def tidy_html(html, hostname):
 
     for tag in soup.findAll("img"):
         if tag["src"].startswith("/"):
-            tag["src"] = "http://" + hostname + tag["src"]
+            tag["src"] = rel_url + tag["src"]
         
     for tag in soup.findAll("a"):
         try:
             if tag["href"].startswith("/"):
-                tag["href"] = "http://" + hostname + tag["href"]
+                tag["href"] = rel_url + tag["href"]
         except KeyError:
             print "WARNING parse error: " + tag.prettify()
     
     return soup.prettify()
 
 def title_to_filename(title):
-    """Given a string title, make a sane filename from it (no whitespace, lowercase)."""
+    """Given a string title, make a sane filename from it (no whitespace, lowercase,
+    certain punctuation characters removed)."""
     sane_title = title.replace('...','')
     sane_title = sane_title.strip()
     sane_title = sane_title.replace(" ",'-')
@@ -53,21 +89,6 @@ def tidy_markdown(md):
 
     return md
 
-
-category_to_tags = {
-    1: "miscellaneous",
-    2: "website",
-    3: "Australia",
-    4: "travel",
-    5: "computing",
-    6: "London",
-    7: "smoking",
-    8: "windsurfing",
-    9: "photos",
-}
-
-skipped_entries = ['96', '101', '102', '124']
-
 fieldnames = ["eid", "title", "catid", "createtime", "updatetime", "teaser", "more"]
 reader = csv.DictReader(open(sys.argv[1]), fieldnames=fieldnames, delimiter=';',
             escapechar='\\')
@@ -89,7 +110,7 @@ for entry in reader:
     html = entry["teaser"]
     if entry.has_key("more"):
         html += entry['more']
-    body = tidy_html(html, "www.darkskills.org.uk")
+    body = tidy_html(html, relative_links_url)
     tag = category_to_tags[int(entry["catid"])]
     (junk, md) = html2markdown(body)
     md = tidy_markdown(md) 
