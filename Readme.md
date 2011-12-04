@@ -1,15 +1,16 @@
 
-# Export blog posts from phpweblog to Jekyll
+# Export blog posts from Personal Weblog to Jekyll
 
 ## Why use it?
 
-You've decided to migrate a blog from phpweblog to
+You've decided to migrate a blog from [Personal
+Weblog](http://www.kyne.com.au/~mark/software/weblog.php) to
 [Jekyll](http://www.jekyllrb.com/) and you want to take your old blog posts
 with you.
 
 ## What does it do?
 
-This script reads a CSV file export of the phpweblog database and produces:
+This script reads a CSV file export of the Personal Weblog database and produces:
 
 - A Markdown file for each blog post
 - Optionally, a file containing mod_rewrite rules to redirect the old content to the content.
@@ -28,7 +29,7 @@ In addition to things that cause it to fail outright, it also produces Markdown 
 maruku (the markdown compiler jekyll uses by default) dislikes, generally because
 spaces get inserted between markup and content.
 
-There are some extremely hacky workarounds for this in phpweblog2jekyll, which 
+There are some extremely hacky workarounds for this in pw2jekyll, which 
 essentially run regexes on the Markdown, fixing the problems that prevented my blog
 posts compiling cleanly.
 
@@ -44,13 +45,13 @@ chance that it might be moderately helpful in writing another tool.
 - You'll need python >= 2.7
 - Get a copy of [html2markdown](http://www.codefu.org/html2markdown/)
 - Copy the htmlmarkdown.py file into a directory
-- Download a copy of phpweblog2jekyll.py and place it in the same directory
+- Download a copy of pw2jekyll.py and place it in the same directory
 
 ### Using
 
-Firstly, you need to tell the script what your phpweblog category names are.
-Create a file called `local_settings.py` in the same directory as
-`phpweblog2jekyll.py` and add something like this:
+Firstly, you need to tell the script what your Personal Weblog category names
+are. Create a file called `local_settings.py` in the same directory as
+`pw2jekyll.py` and add something like this:
 
 	categories = {
 	    1: "miscellaneous",
@@ -61,11 +62,11 @@ Create a file called `local_settings.py` in the same directory as
 
 Run the script thus: 
 
-	phpweblog2jekyll.py csvfile [postsdir] 
+	pw2jekyll.py csvfile [postsdir] 
 
 For example:
 
-	phpweblog2jekyll.py gdb_diary.csv _posts
+	pw2jekyll.py gdb_diary.csv _posts
 
 It will generate a .md file containing [Jekyll's YAML front
 matter](https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter) for each post
@@ -77,9 +78,10 @@ jekyll afterwards and have it generate your posts.
 
 Some additional metadata will be added to the YAML front matter in each file:
 
-- phpweblog_eid: contains the phpweblog entry id (eid). This is useful for working
-out where a post came from
-- updated_at: if the post was edited more than 5 minutes after creation, this field will be added and will contain the date of the edit in %Y-%m-%d format
+- personal_weblog_eid: contains the Personal Weblog entry id (eid). This is
+  useful for working out where a post came from
+- updated_at: if the post was edited more than 5 minutes after creation, this
+  field will be added and will contain the date of the edit in %Y-%m-%d format
 
 #### Generating redirects
 
@@ -90,16 +92,16 @@ RewriteRules that should make all the necessary redirects.
 
 Add some configuration to local_settings.py:
 
-	phpweblog_url_pattern = '/diary/(index.php)?'
+	personal_weblog_url_pattern = '/diary/(index.php)?'
 	jekyll_base_url = 'http://www.gdb.me'
 
 Run with the -r option:
 
-	phpweblog2jekyll.py -r redirectfile csvfile [postsdir]
+	pw2jekyll.py -r redirectfile csvfile [postsdir]
 
 For example:
 
-	phpweblog2jekyll.py -r blog-redirects.conf gdb_diary.csv _posts
+	pw2jekyll.py -r blog-redirects.conf gdb_diary.csv _posts
 
 Be warned that his will also output files to the posts directory, overwriting any changes
 you made since a previous conversion.

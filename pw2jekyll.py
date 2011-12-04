@@ -1,38 +1,28 @@
 #!/usr/bin/env python
 #
-# Convert a phpweblog database export into files for use with Jekyll
+# Convert a Personal Weblog database export into files for use with Jekyll
 # 
 import csv, sys, os, datetime, re, optparse
 from BeautifulSoup import BeautifulSoup
 from html2markdown import html2markdown
 
-## Default settings, these are what I use. 
-## either edit in-place or create a file called local_settings.py
+## Default settings.
+## Either edit in-place or create a file called local_settings.py
 
-# These map phpweblog category ids to category names
-categories = {
-    1: "miscellaneous",
-    2: "website",
-    3: "Australia",
-    4: "travel",
-    5: "computing",
-    6: "London",
-    7: "smoking",
-    8: "windsurfing",
-    9: "photos",
-}
+# These map Personal Weblog category ids to category names
+categories = {}
 
 # If set, this fully qualifies relative links by prepending the string below
 # set it to '' to disable this.
-relative_links_url = 'http://www.darkskills.org.uk'
+relative_links_url = ''
 
 # If you want to skip imports of a few entries, put their ids in a list
 # skipped_entries = [99, 100]
 skipped_entries = []
 
 ######### Only used if you generate redirects: 
-phpweblog_url_pattern = '/diary/(index.php)?'
-jekyll_base_url = 'http://www.gdb.me'
+# personal_weblog_url_pattern = '/diary/(index.php)?'
+# jekyll_base_url = 'http://www.gdb.me'
 
 ## End of default settings
 
@@ -138,7 +128,7 @@ def write_entry_as_markdown(entry, postsdir):
        updatestring = ''
 
     f = open(filepath, 'w')
-    f.write('---\ntitle: \"%s\"\ncategory: %s\nlayout: default\nweblog_eid: %s\n%s---\n' 
+    f.write('---\ntitle: \"%s\"\ncategory: %s\nlayout: default\npersonal_weblog_eid: %s\n%s---\n' 
         % (entry["title"], entry['category'], entry['eid'], updatestring))
     f.write(md)
     f.close()
@@ -167,5 +157,5 @@ if __name__ == '__main__':
     for entry in entries_from_csv(args[0], skipped_entries):
         write_entry_as_markdown(entry, postsdir)
         if opts.redirect_file:
-            write_redirect(entry, redirect_file, phpweblog_url_pattern, jekyll_base_url)
+            write_redirect(entry, redirect_file, personal_weblog_url_pattern, jekyll_base_url)
 
