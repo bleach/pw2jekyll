@@ -2,7 +2,7 @@
 #
 # Convert a phpweblog database export into files for use with Jekyll
 # 
-import csv, sys, os, datetime, re
+import csv, sys, os, datetime, re, optparse
 from BeautifulSoup import BeautifulSoup
 from html2markdown import html2markdown
 
@@ -10,7 +10,7 @@ from html2markdown import html2markdown
 ## either edit in-place or create a file called local_settings.py
 
 # These map phpweblog category ids to category names
-category_to_tags = {
+categories = {
     1: "miscellaneous",
     2: "website",
     3: "Australia",
@@ -30,7 +30,9 @@ relative_links_url = 'http://www.darkskills.org.uk'
 # skipped_entries = [99, 100]
 skipped_entries = []
 
-# 
+######### Only used if you generate redirects: 
+phpweblog_url_pattern = '/diary/(index.php)?'
+jekyll_base_url = 'http://www.gdb.me'
 
 ## End of default settings
 
@@ -89,48 +91,81 @@ def tidy_markdown(md):
 
     return md
 
-fieldnames = ["eid", "title", "catid", "createtime", "updatetime", "teaser", "more"]
-reader = csv.DictReader(open(sys.argv[1]), fieldnames=fieldnames, delimiter=';',
-            escapechar='\\')
+def entries_from_csv(csvfile, skipped_entries):
+    """Generate entries from CSV database export."""
 
-redirect_file = sys.stdout
+    fieldnames = ["eid", "title", "catid", "createtime", "updatetime", "teaser", "more"]
+    reader = csv.DictReader(open(csvfile), fieldnames=fieldnames, delimiter=';',
+                escapechar='\\')
+    
+    for row in reader:
+        if row['eid'] in skipped_entries:
+            continue
 
-for entry in reader:
-    created = datetime.datetime.fromtimestamp(int(entry["createtime"]))
-    updated = datetime.datetime.fromtimestamp(int(entry["updatetime"]))
+        entry = {}
+        
+        entry['eid'] = row['eid']
+        entry['title'] = row['title']
+        entry['created'] = datetime.datetime.fromtimestamp(int(row["createtime"]))
+        entry['updated'] = datetime.datetime.fromtimestamp(int(row["updatetime"]))
+        entry['cleaned_filename'] = title_to_filename(entry['title'])
+    
+        entry['html'] = row["teaser"]
+        if row.has_key("more"):
+            entry['html'] += row['more']
 
-    if updated > (created + datetime.timedelta(minutes=5)):
-        updatestring = 'updated: %s\n' % updated.strftime("%Y-%m-%d")
-    else:
-        updatestring = ''
+        try:
+            entry['category'] = categories[int(row["catid"])]
+        except KeyError:
+            sys.stderr.write('WARNING: No category mapping found for category id %s, assigning to default\n'
+                % row['catid'])
+            sys.stderr.write('Edit local_settings.py and add a categories map.\n')
+            entry['category'] = 'default'
+    
+        yield entry
 
-    if entry['eid'] in skipped_entries:
-        continue
+def write_entry_as_markdown(entry, postsdir):
+    filename = '%s-%s.md' % (entry['created'].strftime("%Y-%m-%d"), entry['cleaned_filename'])
+    filepath = os.path.join(postsdir, filename)
 
-    html = entry["teaser"]
-    if entry.has_key("more"):
-        html += entry['more']
-    body = tidy_html(html, relative_links_url)
-    tag = category_to_tags[int(entry["catid"])]
+    body = tidy_html(entry['html'], relative_links_url)
     (junk, md) = html2markdown(body)
     md = tidy_markdown(md) 
 
-    try:
-        dirname = sys.argv[2]
-    except IndexError:
-        dirname = '.'
-
-    title_filename = title_to_filename(entry['title'])
-
-    filename = '%s-%s.md' % (created.strftime("%Y-%m-%d"), title_filename)
-    filepath = os.path.join(dirname, filename)
+    if entry['updated'] > (entry['created'] + datetime.timedelta(minutes=5)):
+       updatestring = 'updated: %s\n' % entry['updated'].strftime("%Y-%m-%d")
+    else:
+       updatestring = ''
 
     f = open(filepath, 'w')
     f.write('---\ntitle: \"%s\"\ncategory: %s\nlayout: default\nweblog_eid: %s\n%s---\n' 
-        % (entry["title"], tag, entry['eid'], updatestring))
+        % (entry["title"], entry['category'], entry['eid'], updatestring))
     f.write(md)
     f.close()
 
+def write_redirect(entry, redirect_file, old_url, new_host):
     redirect_file.write('\n# Redirect: %s\n' % entry['title'])
     redirect_file.write('RewriteCond %%{QUERY_STRING} wl_eid=%s([^\d]|$)\n' % entry['eid'])
-    redirect_file.write('RewriteRule /diary/(index.php)? http://www.gdb.me/%s/%s.html? [L,R=301]\n' % (tag, title_filename))
+    redirect_file.write('RewriteRule %s %s/%s/%s.html? [L,R=301]\n' 
+        % (old_url, new_host, entry['category'], entry['cleaned_filename']))
+
+if __name__ == '__main__':
+
+    optparser = optparse.OptionParser()
+    optparser.add_option('-r', '--redirect-file', dest='redirect_file', help='Write redirects to FILE', 
+        type="string", default=None)
+    (opts, args) = optparser.parse_args()
+
+    try:
+       postsdir = args[1]
+    except IndexError:
+       postsdir = '.'
+
+    if opts.redirect_file:
+        redirect_file = open(opts.redirect_file, 'w')
+
+    for entry in entries_from_csv(args[0], skipped_entries):
+        write_entry_as_markdown(entry, postsdir)
+        if opts.redirect_file:
+            write_redirect(entry, redirect_file, phpweblog_url_pattern, jekyll_base_url)
+

@@ -47,6 +47,17 @@ chance that it might be moderately helpful in writing another tool.
 
 ### Using
 
+Firstly, you need to tell the script what your phpweblog category names are.
+Create a file called local_settings.py in the same directory as
+phpweblog2jekyll.py and add something like this:
+
+	categories = {
+	    1: "miscellaneous",
+	    2: "website",
+	    3: "Australia",
+	    4: "travel",
+	}
+
 Run the script thus: 
 
 	phpweblog2jekyll.py csvfile [postsdir] 
@@ -76,12 +87,18 @@ redirects from the old posts to the new ones. If you're hosting the old site und
 Apache httpd and mod_rewrite is available you can generate s file containing
 RewriteRules that should make all the necessary redirects.
 
-	phpweblog2jekyll.py -u origurl -d desturl -r redirectfile csvfile [postsdir]
+Add some configuration to local_settings.py:
+
+	phpweblog_url_pattern = '/diary/(index.php)?'
+	jekyll_base_url = 'http://www.gdb.me'
+
+Run with the -r option:
+
+	phpweblog2jekyll.py -r redirectfile csvfile [postsdir]
 
 For example:
 
-	phpweblog2jekyll.py -u '^/diary/' -d 'http://www.gdb.me/' -r blog-redirects.conf \
-	gdb_diary.csv _posts
+	phpweblog2jekyll.py -r blog-redirects.conf gdb_diary.csv _posts
 
 Be warned that his will also output files to the posts directory, overwriting any changes
 you made since a previous conversion.
