@@ -20,6 +20,7 @@ It doesn't work very well. It's bad at reading poorly marked-up HTML, because
 html2markdown, which it uses to convert HTML to Markdown, isn't very good at that.
 
 Specific problems that I have come across are:
+
 - lists inside <p> tags
 - blockquotes inside <p> tags that contain other text
 
