@@ -108,7 +108,7 @@ you made since a previous conversion.
 
 The redirect generator assumes that you're using 'permalink: none' in your
 _config.yaml. If this is not the case, then you'll need to either patch the code
-or write something to generate redirects from the phpweblog_eid YAML data.
+or write something to generate redirects from the personal_weblog_eid YAML data.
 
 ## How do I report bugs?
 
