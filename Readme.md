@@ -21,8 +21,8 @@ html2markdown, which it uses to convert HTML to Markdown, isn't very good at tha
 
 Specific problems that I have come across are:
 
-- lists inside <p> tags
-- blockquotes inside <p> tags that contain other text
+- lists inside `<p>` tags
+- blockquotes inside `<p>` tags that contain other text
 
 In addition to things that cause it to fail outright, it also produces Markdown that
 maruku (the markdown compiler jekyll uses by default) dislikes, generally because
@@ -49,8 +49,8 @@ chance that it might be moderately helpful in writing another tool.
 ### Using
 
 Firstly, you need to tell the script what your phpweblog category names are.
-Create a file called local_settings.py in the same directory as
-phpweblog2jekyll.py and add something like this:
+Create a file called `local_settings.py` in the same directory as
+`phpweblog2jekyll.py` and add something like this:
 
 	categories = {
 	    1: "miscellaneous",
