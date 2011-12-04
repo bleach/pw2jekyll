@@ -49,11 +49,11 @@ chance that it might be moderately helpful in writing another tool.
 
 Run the script thus: 
 
-	phpweblog2jekyll csvfile [postsdir] 
+	phpweblog2jekyll.py csvfile [postsdir] 
 
 For example:
 
-	phpweblog2jekyll gdb_diary.csv _posts
+	phpweblog2jekyll.py gdb_diary.csv _posts
 
 It will generate a .md file containing [Jekyll's YAML front
 matter](https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter) for each post
@@ -76,11 +76,11 @@ redirects from the old posts to the new ones. If you're hosting the old site und
 Apache httpd and mod_rewrite is available you can generate s file containing
 RewriteRules that should make all the necessary redirects.
 
-	phpweblog2jekyll -u origurl -d desturl -r redirectfile csvfile [postsdir]
+	phpweblog2jekyll.py -u origurl -d desturl -r redirectfile csvfile [postsdir]
 
 For example:
 
-	phpweblog2jekyll -u '^/diary/' -d 'http://www.gdb.me/' -r blog-redirects.conf \
+	phpweblog2jekyll.py -u '^/diary/' -d 'http://www.gdb.me/' -r blog-redirects.conf \
 	gdb_diary.csv _posts
 
 Be warned that his will also output files to the posts directory, overwriting any changes
